@@ -1,0 +1,171 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-config
+  namespace: payment-gateway
+data:
+  APP_ENV: "kubernetes"
+  # 1 database = 1 bounded context: tiap context punya PostgreSQL sendiri di
+  # depan PgBouncer (lihat postgres-*.yaml + pgbouncer-*.yaml). Prefix dipilih
+  # lewat pkg/database/names.go (Cluster*). DB_HOST/DB_PORT/DB_NAME base sengaja
+  # tidak ada supaya key per-context yang hilang bikin pod gagal start.
+  DB_DRIVER: "postgres"
+  DB_USERNAME: "postgres"
+  DB_IDENTITY_HOST: "pgbouncer-identity.payment-gateway.svc.cluster.local"
+  DB_IDENTITY_PORT: "5432"
+  DB_IDENTITY_NAME: "pg_identity"
+  DB_PAYMENT_HOST: "pgbouncer-payment.payment-gateway.svc.cluster.local"
+  DB_PAYMENT_PORT: "5432"
+  DB_PAYMENT_NAME: "pg_payment"
+  DB_FINANCIAL_HOST: "pgbouncer-financial.payment-gateway.svc.cluster.local"
+  DB_FINANCIAL_PORT: "5432"
+  DB_FINANCIAL_NAME: "pg_financial"
+
+  # ---- Spring Boot per-bounded-context datasources ----
+  # Tiap microservice membaca <MODULE>_DB_* dan menunjuk ke PgBouncer context-nya.
+  # DB user = postgres (sama dengan POSTGRES_USER di StatefulSet).
+  # identity context → pgbouncer-identity / pg_identity
+  ROLE_DB_HOST: "pgbouncer-identity.payment-gateway.svc.cluster.local"
+  ROLE_DB_PORT: "5432"
+  ROLE_DB_NAME: "pg_identity"
+  ROLE_DB_USER: "postgres"
+  ROLE_DB_PASSWORD: "postgres"
+  USER_DB_HOST: "pgbouncer-identity.payment-gateway.svc.cluster.local"
+  USER_DB_PORT: "5432"
+  USER_DB_NAME: "pg_identity"
+  USER_DB_USER: "postgres"
+  USER_DB_PASSWORD: "postgres"
+  AUTH_DB_HOST: "pgbouncer-identity.payment-gateway.svc.cluster.local"
+  AUTH_DB_PORT: "5432"
+  AUTH_DB_NAME: "pg_identity"
+  AUTH_DB_USER: "postgres"
+  AUTH_DB_PASSWORD: "postgres"
+  # payment context → pgbouncer-payment / pg_payment
+  MERCHANT_DB_HOST: "pgbouncer-payment.payment-gateway.svc.cluster.local"
+  MERCHANT_DB_PORT: "5432"
+  MERCHANT_DB_NAME: "pg_payment"
+  MERCHANT_DB_USER: "postgres"
+  MERCHANT_DB_PASSWORD: "postgres"
+  CARD_DB_HOST: "pgbouncer-payment.payment-gateway.svc.cluster.local"
+  CARD_DB_PORT: "5432"
+  CARD_DB_NAME: "pg_payment"
+  CARD_DB_USER: "postgres"
+  CARD_DB_PASSWORD: "postgres"
+  SALDO_DB_HOST: "pgbouncer-payment.payment-gateway.svc.cluster.local"
+  SALDO_DB_PORT: "5432"
+  SALDO_DB_NAME: "pg_payment"
+  SALDO_DB_USER: "postgres"
+  SALDO_DB_PASSWORD: "postgres"
+  TOPUP_DB_HOST: "pgbouncer-payment.payment-gateway.svc.cluster.local"
+  TOPUP_DB_PORT: "5432"
+  TOPUP_DB_NAME: "pg_payment"
+  TOPUP_DB_USER: "postgres"
+  TOPUP_DB_PASSWORD: "postgres"
+  # financial context → pgbouncer-financial / pg_financial
+  TRANSACTION_DB_HOST: "pgbouncer-financial.payment-gateway.svc.cluster.local"
+  TRANSACTION_DB_PORT: "5432"
+  TRANSACTION_DB_NAME: "pg_financial"
+  TRANSACTION_DB_USER: "postgres"
+  TRANSACTION_DB_PASSWORD: "postgres"
+  TRANSFER_DB_HOST: "pgbouncer-financial.payment-gateway.svc.cluster.local"
+  TRANSFER_DB_PORT: "5432"
+  TRANSFER_DB_NAME: "pg_financial"
+  TRANSFER_DB_USER: "postgres"
+  TRANSFER_DB_PASSWORD: "postgres"
+  WITHDRAW_DB_HOST: "pgbouncer-financial.payment-gateway.svc.cluster.local"
+  WITHDRAW_DB_PORT: "5432"
+  WITHDRAW_DB_NAME: "pg_financial"
+  WITHDRAW_DB_USER: "postgres"
+  WITHDRAW_DB_PASSWORD: "postgres"
+
+  # GHCR image owner — must match github.repository_owner (lowercase) of the
+  # repository whose CI pushes images to ghcr.io/<owner>/springboot-paymentgateway/...
+  # Manifest hanya menulis placeholder `__GHCR_OWNER__`; nilai ini di-substitusi
+  # oleh blok `replacements` di overlays/production/kustomization.yaml.
+  GHCR_OWNER: "mamangrust"
+
+  SMTP_SERVER: smtp.ethereal.email
+  SMTP_PORT: "587"
+
+  APP_LOGGER: "kubernetes"
+
+  KAFKA_BROKERS: "kafka.payment-gateway.svc.cluster.local:9092"
+  # ai-security (Python) membaca KAFKA_SERVERS, bukan KAFKA_BROKERS.
+  KAFKA_SERVERS: "kafka.payment-gateway.svc.cluster.local:9092"
+
+  REDIS_ADDRS: "redis-0.redis.payment-gateway.svc.cluster.local:6379,redis-1.redis.payment-gateway.svc.cluster.local:6379,redis-2.redis.payment-gateway.svc.cluster.local:6379,redis-3.redis.payment-gateway.svc.cluster.local:6379,redis-4.redis.payment-gateway.svc.cluster.local:6379,redis-5.redis.payment-gateway.svc.cluster.local:6379"
+  REDIS_DB: "0"
+
+  # OLAP (stats-reader / stats-writer). CLICKHOUSE_ADDR menang atas HOST/PORT
+  # di pkg/clickhouse/connect.go. Password ada di Secret app-secrets.
+  CLICKHOUSE_ADDR: "clickhouse.payment-gateway.svc.cluster.local:9000"
+  CLICKHOUSE_DATABASE: "default"
+  CLICKHOUSE_USERNAME: "dragon"
+
+  OTEL_ENDPOINT: "otel-collector.payment-gateway.svc.cluster.local:4317"
+
+  GRPC_AUTH_ADDR: "auth.payment-gateway.svc.cluster.local:9012"
+  GRPC_ROLE_ADDR: "role.payment-gateway.svc.cluster.local:9006"
+  GRPC_CARD_ADDR: "card.payment-gateway.svc.cluster.local:9004"
+  GRPC_MERCHANT_ADDR: "merchant.payment-gateway.svc.cluster.local:9005"
+  GRPC_USER_ADDR: "user.payment-gateway.svc.cluster.local:9011"
+  GRPC_SALDO_ADDR: "saldo.payment-gateway.svc.cluster.local:9007"
+  GRPC_TOPUP_ADDR: "topup.payment-gateway.svc.cluster.local:9008"
+  GRPC_TRANSACTION_ADDR: "transaction.payment-gateway.svc.cluster.local:9009"
+  GRPC_TRANSFER_ADDR: "transfer.payment-gateway.svc.cluster.local:9010"
+  GRPC_WITHDRAW_ADDR: "withdraw.payment-gateway.svc.cluster.local:9013"
+  GRPC_STATS_READER_ADDR: "stats-reader.payment-gateway.svc.cluster.local:9014"
+
+  GRPC_AUTH_PORT: "9012"
+  GRPC_ROLE_PORT: "9006"
+  GRPC_CARD_PORT: "9004"
+  GRPC_MERCHANT_PORT: "9005"
+  GRPC_USER_PORT: "9011"
+  GRPC_SALDO_PORT: "9007"
+  GRPC_TOPUP_PORT: "9008"
+  GRPC_TRANSACTION_PORT: "9009"
+  GRPC_TRANSFER_PORT: "9010"
+  GRPC_WITHDRAW_PORT: "9013"
+
+  METRIC_EMAIL_ADDR: "8080"
+  METRIC_AUTH_ADDR: "8081"
+  METRIC_ROLE_ADDR: "8082"
+  METRIC_CARD_ADDR: "8083"
+  METRIC_MERCHANT_ADDR: "8084"
+  METRIC_USER_ADDR: "8085"
+  METRIC_SALDO_ADDR: "8086"
+  METRIC_TOPUP_ADDR: "8087"
+  METRIC_TRANSACTION_ADDR: "8088"
+  METRIC_TRANSFER_ADDR: "8089"
+  METRIC_WITHDRAW_ADDR: "8090"
+
+  # ---- Spring Boot gRPC client resolution (gateway + inter-service calls) ----
+  # Relaxed binding: GRPC_CLIENT_<NAME>_HOST/_PORT -> grpc.client.<name>.host/port.
+  GATEWAY_PORT: "8080"
+  EMAIL_HTTP_PORT: "8092"
+  GRPC_CLIENT_ROLE_HOST: "role.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_ROLE_PORT: "9006"
+  GRPC_CLIENT_USER_HOST: "user.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_USER_PORT: "9011"
+  GRPC_CLIENT_AUTH_HOST: "auth.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_AUTH_PORT: "9012"
+  GRPC_CLIENT_MERCHANT_HOST: "merchant.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_MERCHANT_PORT: "9005"
+  GRPC_CLIENT_CARD_HOST: "card.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_CARD_PORT: "9004"
+  GRPC_CLIENT_SALDO_HOST: "saldo.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_SALDO_PORT: "9007"
+  GRPC_CLIENT_TOPUP_HOST: "topup.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_TOPUP_PORT: "9008"
+  GRPC_CLIENT_TRANSACTION_HOST: "transaction.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_TRANSACTION_PORT: "9009"
+  GRPC_CLIENT_TRANSFER_HOST: "transfer.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_TRANSFER_PORT: "9010"
+  GRPC_CLIENT_WITHDRAW_HOST: "withdraw.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_WITHDRAW_PORT: "9013"
+  GRPC_CLIENT_STATS_READER_HOST: "stats-reader.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_STATS_READER_PORT: "9014"
+  GRPC_CLIENT_STATS_HOST: "stats-reader.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_STATS_PORT: "9014"
+  GRPC_CLIENT_AI_SECURITY_HOST: "ai-security.payment-gateway.svc.cluster.local"
+  GRPC_CLIENT_AI_SECURITY_PORT: "50051"

@@ -1,0 +1,36 @@
+syntax = "proto3";
+
+package pb.stats;
+
+option java_multiple_files = true;
+option java_package = "com.sanedge.paymentgateway.pb.stats";
+
+option go_package = "github.com/MamangRust/paymentgateway-shared/pb";
+
+// StatsReaderService is the centralized ClickHouse-backed analytics reader.
+// It is served by the `stats-reader` microservice (gRPC 9014).
+service StatsReaderService {
+    rpc FindMonthlyTotalRevenue(StatsRequest) returns (StatsResponse);
+    rpc FindCardStats(StatsRequest) returns (StatsResponse);
+    rpc FindYearlyVolume(StatsRequest) returns (StatsResponse);
+    rpc FindMerchantVolume(StatsRequest) returns (StatsResponse);
+}
+
+message StatsRequest {
+    int32 year = 1;
+    int32 month = 2;
+    int64 card_id = 3;
+    int64 merchant_id = 4;
+}
+
+message StatItem {
+    string period = 1;      // "YYYY-MM" for monthly, "YYYY" for yearly
+    int64 dimension_id = 2; // card_id / merchant_id depending on the metric
+    double value = 3;       // aggregated volume / revenue
+}
+
+message StatsResponse {
+    string status = 1;
+    string message = 2;
+    repeated StatItem data = 3;
+}

@@ -1,0 +1,72 @@
+type Transaction {
+    id: ID!
+    transactionNo: String
+    cardNumber: String
+    amount: Float
+    paymentMethod: String
+    merchantId: ID
+    transactionTime: String
+    createdAt: String
+    updatedAt: String
+}
+
+type TransactionDeleteAt {
+    id: ID!
+    transactionNo: String
+    cardNumber: String
+    amount: Float
+    paymentMethod: String
+    merchantId: ID
+    transactionTime: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type TransactionPage {
+    data: [Transaction!]!
+    pagination: PaginationMeta!
+}
+
+type TransactionDeleteAtPage {
+    data: [TransactionDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+input CreateTransactionInput {
+    cardNumber: String!
+    amount: Float!
+    paymentMethod: String!
+    merchantId: ID!
+}
+
+input UpdateTransactionInput {
+    transactionId: ID!
+    cardNumber: String
+    amount: Float
+    paymentMethod: String
+    merchantId: ID
+}
+
+extend type Query {
+    transactions(page: Int = 1, pageSize: Int = 10, search: String = ""): TransactionPage!
+    transaction(id: ID!): Transaction!
+    transactionsByCard(cardNumber: String!, page: Int = 1, pageSize: Int = 10, search: String = ""): TransactionPage!
+    transactionsByMerchant(merchantId: ID!): [Transaction!]!
+    activeTransactions(page: Int = 1, pageSize: Int = 10, search: String = ""): TransactionDeleteAtPage!
+    trashedTransactions(page: Int = 1, pageSize: Int = 10, search: String = ""): TransactionDeleteAtPage!
+}
+
+extend type Mutation {
+    """
+    The former REST endpoint required the `X-api-Key` header; it is now an explicit
+    field argument so the GraphQL contract stays self-describing.
+    """
+    createTransaction(input: CreateTransactionInput!, apiKey: String): Transaction!
+    updateTransaction(input: UpdateTransactionInput!, apiKey: String): Transaction!
+    trashTransaction(id: ID!): TransactionDeleteAt!
+    restoreTransaction(id: ID!): TransactionDeleteAt!
+    deleteTransactionPermanent(id: ID!): Boolean!
+    restoreAllTransactions: Boolean!
+    deleteAllTransactionsPermanent: Boolean!
+}

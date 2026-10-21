@@ -1,0 +1,64 @@
+type Topup {
+    id: ID!
+    cardNumber: String
+    topupNo: String
+    topupAmount: Float
+    topupMethod: String
+    topupTime: String
+    createdAt: String
+    updatedAt: String
+}
+
+type TopupDeleteAt {
+    id: ID!
+    cardNumber: String
+    topupNo: String
+    topupAmount: Float
+    topupMethod: String
+    topupTime: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type TopupPage {
+    data: [Topup!]!
+    pagination: PaginationMeta!
+}
+
+type TopupDeleteAtPage {
+    data: [TopupDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+input CreateTopupInput {
+    cardNumber: String!
+    topupAmount: Float!
+    topupMethod: String!
+}
+
+input UpdateTopupInput {
+    topupId: ID!
+    cardNumber: String
+    topupAmount: Float
+    topupMethod: String
+}
+
+extend type Query {
+    topups(page: Int = 1, pageSize: Int = 10, search: String = ""): TopupPage!
+    topup(id: ID!): Topup!
+    topupsByCard(cardNumber: String!, page: Int = 1, pageSize: Int = 10, search: String = ""): TopupPage!
+    topupsOfCard(cardNumber: String!): [Topup!]!
+    activeTopups(page: Int = 1, pageSize: Int = 10, search: String = ""): TopupDeleteAtPage!
+    trashedTopups(page: Int = 1, pageSize: Int = 10, search: String = ""): TopupDeleteAtPage!
+}
+
+extend type Mutation {
+    createTopup(input: CreateTopupInput!): Topup!
+    updateTopup(input: UpdateTopupInput!): Topup!
+    trashTopup(id: ID!): TopupDeleteAt!
+    restoreTopup(id: ID!): TopupDeleteAt!
+    deleteTopupPermanent(id: ID!): Boolean!
+    restoreAllTopups: Boolean!
+    deleteAllTopupsPermanent: Boolean!
+}

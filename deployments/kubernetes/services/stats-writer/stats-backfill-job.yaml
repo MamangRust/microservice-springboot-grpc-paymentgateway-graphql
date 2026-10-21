@@ -1,0 +1,74 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: stats-backfill
+  namespace: payment-gateway
+spec:
+  # Manual job: apply it explicitly when historical financial rows need to be
+  # materialized into ClickHouse. Re-running is safe — ClickHouse is append-only
+  # and the source query is deterministic per backfill window.
+  backoffLimit: 3
+  template:
+    spec:
+      serviceAccountName: app
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-deps
+          image: busybox:1.35
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "[INIT] Waiting for source PostgreSQL (financial) + ClickHouse..."
+              # The backfill reads aggregated volume directly from the financial DB
+              # (JDBC), not the gRPC services, so wait on those.
+              until nc -z postgres-financial.payment-gateway.svc.cluster.local 5432 \
+                && nc -z clickhouse.payment-gateway.svc.cluster.local 8123; do
+                echo "Dependencies not ready yet. Retrying in 5 seconds..."
+                sleep 5
+              done
+              echo "[INIT] All dependencies are ready!"
+      containers:
+        - name: stats-backfill
+          image: ghcr.io/__GHCR_OWNER__/springboot-paymentgateway/stats-writer:latest
+          imagePullPolicy: IfNotPresent
+          args: ["backfill"]
+          env:
+            # Run the embedded one-shot backfill (CommandLineRunner) instead of the
+            # Kafka consumer; the app also disables the web stack in this mode.
+            - name: APP_BACKFILL_ENABLED
+              value: "true"
+            # Point the source DataSource at the in-cluster financial PostgreSQL.
+            - name: backfill.source.url
+              value: "jdbc:postgresql://postgres-financial.payment-gateway.svc.cluster.local:5432/pg_financial"
+            - name: backfill.source.user
+              value: "DRAGON"
+            - name: backfill.source.password
+              value: "DRAGON"
+            # Schema-correct backfill query: join transactions -> cards to recover the
+            # integer card_id the live stats.*.event producer emits (card.id()).
+            - name: BACKFILL_SQL
+              value: "SELECT to_char(t.created_at, 'YYYY-MM') AS period, COALESCE(c.card_id, 0) AS card_id, COALESCE(t.merchant_id, 0) AS merchant_id, SUM(t.amount) AS volume FROM transactions t LEFT JOIN cards c ON t.card_number = c.card_number GROUP BY 1, 2, 3"
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "250m"
+            limits:
+              memory: "512Mi"
+              cpu: "1000m"
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: true
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop: [ALL]
+      restartPolicy: OnFailure

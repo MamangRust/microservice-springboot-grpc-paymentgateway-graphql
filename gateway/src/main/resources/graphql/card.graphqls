@@ -1,0 +1,89 @@
+type Card {
+    id: ID!
+    userId: ID
+    cardNumber: String
+    cardType: String
+    expireDate: String
+    cvv: String
+    cardProvider: String
+    createdAt: String
+    updatedAt: String
+}
+
+type CardDeleteAt {
+    id: ID!
+    userId: ID
+    cardNumber: String
+    cardType: String
+    expireDate: String
+    cvv: String
+    cardProvider: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type CardDashboard {
+    totalBalance: Float
+    totalTopup: Float
+    totalWithdraw: Float
+    totalTransaction: Float
+    totalTransfer: Float
+}
+
+type CardDashboardCard {
+    totalBalance: Float
+    totalTopup: Float
+    totalWithdraw: Float
+    totalTransaction: Float
+    totalTransferSend: Float
+    totalTransferReceiver: Float
+}
+
+type CardPage {
+    data: [Card!]!
+    pagination: PaginationMeta!
+}
+
+type CardDeleteAtPage {
+    data: [CardDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+input CreateCardInput {
+    userId: ID!
+    cardType: String!
+    expireDate: String
+    cvv: String!
+    cardProvider: String!
+}
+
+input UpdateCardInput {
+    cardId: ID!
+    userId: ID
+    cardType: String
+    expireDate: String
+    cvv: String
+    cardProvider: String
+}
+
+extend type Query {
+    cards(page: Int = 1, pageSize: Int = 10, search: String = ""): CardPage!
+    card(id: ID!): Card!
+    activeCards(page: Int = 1, pageSize: Int = 10, search: String = ""): CardDeleteAtPage!
+    trashedCards(page: Int = 1, pageSize: Int = 10, search: String = ""): CardDeleteAtPage!
+    cardByUser(userId: ID!): Card!
+    cardByNumber(cardNumber: String!): Card!
+    cardDashboard: CardDashboard!
+    cardDashboardByNumber(cardNumber: String!): CardDashboardCard!
+}
+
+extend type Mutation {
+    createCard(input: CreateCardInput!): Card!
+    updateCard(input: UpdateCardInput!): Card!
+    trashCard(id: ID!): CardDeleteAt!
+    restoreCard(id: ID!): CardDeleteAt!
+    deleteCardPermanent(id: ID!): Boolean!
+    restoreAllCards: Boolean!
+    deleteAllCardsPermanent: Boolean!
+}

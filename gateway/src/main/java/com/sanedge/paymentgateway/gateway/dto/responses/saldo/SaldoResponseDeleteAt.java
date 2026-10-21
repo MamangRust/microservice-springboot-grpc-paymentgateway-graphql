@@ -1,0 +1,22 @@
+package com.sanedge.paymentgateway.gateway.dto.responses.saldo;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@AllArgsConstructor
+@NoArgsConstructor
+public class SaldoResponseDeleteAt {
+        private Long id;
+        private String cardNumber;
+        private Long totalBalance;
+        private Long withdrawAmount;
+        private String withdrawTime;
+        private String createdAt;
+        private String updatedAt;
+        private String deletedAt;
+
+        
+}

@@ -1,0 +1,59 @@
+type Withdraw {
+    id: ID!
+    withdrawNo: String
+    cardNumber: String
+    withdrawAmount: Float
+    withdrawTime: String
+    createdAt: String
+    updatedAt: String
+}
+
+type WithdrawDeleteAt {
+    id: ID!
+    withdrawNo: String
+    cardNumber: String
+    withdrawAmount: Float
+    withdrawTime: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type WithdrawPage {
+    data: [Withdraw!]!
+    pagination: PaginationMeta!
+}
+
+type WithdrawDeleteAtPage {
+    data: [WithdrawDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+input CreateWithdrawInput {
+    cardNumber: String!
+    withdrawAmount: Float!
+}
+
+input UpdateWithdrawInput {
+    withdrawId: ID!
+    cardNumber: String
+    withdrawAmount: Float
+}
+
+extend type Query {
+    withdraws(page: Int = 1, pageSize: Int = 10, search: String = ""): WithdrawPage!
+    withdraw(id: ID!): Withdraw!
+    withdrawsByCard(cardNumber: String!): [Withdraw!]!
+    activeWithdraws(page: Int = 1, pageSize: Int = 10, search: String = ""): WithdrawDeleteAtPage!
+    trashedWithdraws(page: Int = 1, pageSize: Int = 10, search: String = ""): WithdrawDeleteAtPage!
+}
+
+extend type Mutation {
+    createWithdraw(input: CreateWithdrawInput!): Withdraw!
+    updateWithdraw(input: UpdateWithdrawInput!): Withdraw!
+    trashWithdraw(id: ID!): WithdrawDeleteAt!
+    restoreWithdraw(id: ID!): WithdrawDeleteAt!
+    deleteWithdrawPermanent(id: ID!): Boolean!
+    restoreAllWithdraws: Boolean!
+    deleteAllWithdrawsPermanent: Boolean!
+}

@@ -1,0 +1,61 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: stats-reader
+  namespace: payment-gateway
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: stats-reader
+  template:
+    metadata:
+      labels:
+        app: stats-reader
+    spec:
+      serviceAccountName: app
+      automountServiceAccountToken: false
+      securityContext:
+        runAsUser: 1000
+        runAsGroup: 1000
+        fsGroup: 1000
+      initContainers:
+        - name: wait-for-clickhouse
+          image: busybox:1.35
+          command: ["sh", "-c"]
+          args:
+            - |
+              echo "[INIT] Waiting for ClickHouse to be ready (HTTP)..."
+              until nc -z clickhouse.payment-gateway.svc.cluster.local 8123; do
+                echo "ClickHouse is not ready yet. Retrying in 5 seconds..."
+                sleep 5
+              done
+              echo "[INIT] ClickHouse is accessible!"
+      containers:
+        - name: stats-reader
+          image: ghcr.io/__GHCR_OWNER__/springboot-paymentgateway/stats-reader:latest
+          imagePullPolicy: IfNotPresent
+          envFrom:
+            - configMapRef:
+                name: app-config
+            - secretRef:
+                name: app-secrets
+          # payment app-config only exposes REDIS_ADDRS (cluster mode); the
+          # stats-reader Spring client uses the single-node spring.data.redis.host
+          # relay (REDIS_HOST), so pin it explicitly to a cluster node.
+          env:
+            - name: REDIS_HOST
+              value: "redis-0.redis.payment-gateway.svc.cluster.local"
+            - name: REDIS_PORT
+              value: "6379"
+            - name: REDIS_PASSWORD
+              value: "dragon_knight"
+          ports:
+            - containerPort: 9014
+          resources:
+            requests:
+              memory: "128Mi"
+              cpu: "100m"
+            limits:
+              memory: "256Mi"
+              cpu: "200m"

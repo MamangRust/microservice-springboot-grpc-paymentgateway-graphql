@@ -1,0 +1,82 @@
+type Merchant {
+    id: ID!
+    name: String
+    userId: ID
+    apiKey: String
+    status: String
+    createdAt: String
+    updatedAt: String
+}
+
+type MerchantDeleteAt {
+    id: ID!
+    name: String
+    userId: ID
+    apiKey: String
+    status: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type MerchantTransaction {
+    id: ID!
+    cardNumber: String
+    amount: Float
+    paymentMethod: String
+    merchantId: ID
+    merchantName: String
+    transactionTime: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type MerchantPage {
+    data: [Merchant!]!
+    pagination: PaginationMeta!
+}
+
+type MerchantDeleteAtPage {
+    data: [MerchantDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+type MerchantTransactionPage {
+    data: [MerchantTransaction!]!
+    pagination: PaginationMeta!
+}
+
+input CreateMerchantInput {
+    name: String!
+    userId: ID!
+}
+
+input UpdateMerchantInput {
+    merchantId: ID!
+    name: String
+    userId: ID
+    status: String
+}
+
+extend type Query {
+    merchants(page: Int = 1, pageSize: Int = 10, search: String = ""): MerchantPage!
+    merchant(id: ID!): Merchant!
+    activeMerchants(page: Int = 1, pageSize: Int = 10, search: String = ""): MerchantDeleteAtPage!
+    trashedMerchants(page: Int = 1, pageSize: Int = 10, search: String = ""): MerchantDeleteAtPage!
+    merchantByApiKey(apiKey: String!): Merchant!
+    merchantsByUser(userId: ID!): [Merchant!]!
+    merchantTransactions(page: Int = 1, pageSize: Int = 10, search: String = ""): MerchantTransactionPage!
+    merchantTransactionsByMerchant(merchantId: ID!, page: Int = 1, pageSize: Int = 10, search: String = ""): MerchantTransactionPage!
+    merchantTransactionsByApiKey(apiKey: String!, page: Int = 1, pageSize: Int = 10, search: String = ""): MerchantTransactionPage!
+}
+
+extend type Mutation {
+    createMerchant(input: CreateMerchantInput!): Merchant!
+    updateMerchant(input: UpdateMerchantInput!): Merchant!
+    trashMerchant(id: ID!): MerchantDeleteAt!
+    restoreMerchant(id: ID!): MerchantDeleteAt!
+    deleteMerchantPermanent(id: ID!): Boolean!
+    restoreAllMerchants: Boolean!
+    deleteAllMerchantsPermanent: Boolean!
+}

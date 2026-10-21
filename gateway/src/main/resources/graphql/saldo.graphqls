@@ -1,0 +1,59 @@
+type Saldo {
+    id: ID!
+    cardNumber: String
+    totalBalance: Float
+    withdrawAmount: Float
+    withdrawTime: String
+    createdAt: String
+    updatedAt: String
+}
+
+type SaldoDeleteAt {
+    id: ID!
+    cardNumber: String
+    totalBalance: Float
+    withdrawAmount: Float
+    withdrawTime: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type SaldoPage {
+    data: [Saldo!]!
+    pagination: PaginationMeta!
+}
+
+type SaldoDeleteAtPage {
+    data: [SaldoDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+input CreateSaldoInput {
+    cardNumber: String!
+    totalBalance: Float!
+}
+
+input UpdateSaldoInput {
+    saldoId: ID!
+    cardNumber: String
+    totalBalance: Float
+}
+
+extend type Query {
+    saldos(page: Int = 1, pageSize: Int = 10, search: String = ""): SaldoPage!
+    saldo(id: ID!): Saldo!
+    activeSaldos(page: Int = 1, pageSize: Int = 10, search: String = ""): SaldoDeleteAtPage!
+    trashedSaldos(page: Int = 1, pageSize: Int = 10, search: String = ""): SaldoDeleteAtPage!
+    saldoByCard(cardNumber: String!): Saldo!
+}
+
+extend type Mutation {
+    createSaldo(input: CreateSaldoInput!): Saldo!
+    updateSaldo(input: UpdateSaldoInput!): Saldo!
+    trashSaldo(id: ID!): SaldoDeleteAt!
+    restoreSaldo(id: ID!): SaldoDeleteAt!
+    deleteSaldoPermanent(id: ID!): Boolean!
+    restoreAllSaldos: Boolean!
+    deleteAllSaldosPermanent: Boolean!
+}

@@ -1,0 +1,12 @@
+type StatItem {
+    period: String
+    dimensionId: ID
+    value: Float
+}
+
+extend type Query {
+    monthlyTotalRevenue(year: Int, month: Int): [StatItem!]!
+    cardStats(cardId: ID, year: Int): [StatItem!]!
+    yearlyVolume(year: Int): [StatItem!]!
+    merchantVolume(merchantId: ID, year: Int): [StatItem!]!
+}

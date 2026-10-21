@@ -1,0 +1,64 @@
+type Transfer {
+    id: ID!
+    transferNo: String
+    transferFrom: String
+    transferTo: String
+    transferAmount: Float
+    transferTime: String
+    createdAt: String
+    updatedAt: String
+}
+
+type TransferDeleteAt {
+    id: ID!
+    transferNo: String
+    transferFrom: String
+    transferTo: String
+    transferAmount: Float
+    transferTime: String
+    createdAt: String
+    updatedAt: String
+    deletedAt: String
+}
+
+type TransferPage {
+    data: [Transfer!]!
+    pagination: PaginationMeta!
+}
+
+type TransferDeleteAtPage {
+    data: [TransferDeleteAt!]!
+    pagination: PaginationMeta!
+}
+
+input CreateTransferInput {
+    transferFrom: String!
+    transferTo: String!
+    transferAmount: Float!
+}
+
+input UpdateTransferInput {
+    transferId: ID!
+    transferFrom: String
+    transferTo: String
+    transferAmount: Float
+}
+
+extend type Query {
+    transfers(page: Int = 1, pageSize: Int = 10, search: String = ""): TransferPage!
+    transfer(id: ID!): Transfer!
+    activeTransfers(page: Int = 1, pageSize: Int = 10, search: String = ""): TransferDeleteAtPage!
+    trashedTransfers(page: Int = 1, pageSize: Int = 10, search: String = ""): TransferDeleteAtPage!
+    transfersFrom(transferFrom: String!): [Transfer!]!
+    transfersTo(transferTo: String!): [Transfer!]!
+}
+
+extend type Mutation {
+    createTransfer(input: CreateTransferInput!): Transfer!
+    updateTransfer(input: UpdateTransferInput!): Transfer!
+    trashTransfer(id: ID!): TransferDeleteAt!
+    restoreTransfer(id: ID!): TransferDeleteAt!
+    deleteTransferPermanent(id: ID!): Boolean!
+    restoreAllTransfers: Boolean!
+    deleteAllTransfersPermanent: Boolean!
+}
